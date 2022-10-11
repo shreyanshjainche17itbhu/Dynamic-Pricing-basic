@@ -1,0 +1,40 @@
+from xgboost import XGBRegressor
+from numpy import asarray
+model = XGBRegressor()
+model.fit(df_train[['price','day', 'weekend']], np.array(df_train.slots))
+
+def mean_absolute_percentage_error(y_true, y_pred): 
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+
+def mean_absolute_error(y_true, y_pred): 
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs(y_true - y_pred)) 
+
+rmse = round(math.sqrt(MSE(df_val['slots'],model.predict(df_val[['price','day','weekend']]))),2)
+
+mae = round(mean_absolute_error( df_val['slots'],model.predict(df_val[['price','day','weekend']]) ),2)
+
+mape = round(mean_absolute_percentage_error( df_val['slots'],model.predict(df_val[['price','day','weekend']]) ),2)
+
+print(f"Root Mean squared error : {rmse}\nMean absolute error : {mae}\nMean Absolute percentage error : {mape}%")
+
+#Save the model output for future calculation
+weekend_last_10 = []
+for i in range(20,31):
+    if i%6 ==0: weekend_last_10.append(1)
+    else: weekend_last_10.append(0)
+        
+mp = {}
+lst = []
+for p in range(min_price, max_price+1):
+    for d,w in zip(range(days - optimisation_day_bfr_jouney , days +  1),weekend_last_10) :
+        lst.append([p,d,w])
+        
+lst_ap = pd.DataFrame(lst)
+lst_ap.columns =['price', 'day', 'weekend']
+        
+pred = model.predict(lst_ap)
+
+for i in range(len(lst)):
+    mp[lst[i][0],lst[i][1],lst[i][2]] = int(pred[i])
