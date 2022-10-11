@@ -71,3 +71,5 @@ Filled after dynamic Pricing: {df_tmp['forecasted_slots'].sum()}\nSlots gain: {s
 #Test the difference
 journey_id = 15
 output = optimise(df, journey_id)
+output
+
