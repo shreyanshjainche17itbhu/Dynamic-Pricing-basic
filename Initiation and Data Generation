@@ -1,0 +1,72 @@
+import pandas as pd
+import numpy as np
+import random
+from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.metrics import mean_squared_error as MSE
+import warnings
+import math
+import seaborn as sns
+import matplotlib.pyplot as plt
+warnings.filterwarnings("ignore")
+
+days = 30
+min_price = 4000
+max_price = 14000
+total_slots = 180
+journey = 50
+train_val_prop = 0.75
+lst_days = list(range(1,days+1))
+wastage_pct_min_range = 15
+wastage_pct_max_range = 20
+emptiness_threshold = 0.02
+optimisation_day_bfr_jouney = 10
+
+lst_df = []
+weekend = []
+for j in range(journey):
+    lst_price = []
+    lst_price_temp = []
+    prev_price = min_price
+    weekend = []
+    for k in lst_days:
+        if k%6 ==0: weekend.append(1)
+        else: weekend.append(0)
+    for i in range(days):
+        cur_price = min(prev_price + random.randint(0,500), max_price)
+        prev_price = cur_price
+        lst_price_temp.append(cur_price)
+        
+    for x,y in zip(lst_price_temp,weekend):
+        lst_price.append(int(x + x*y*0.10))
+        
+
+    slots_filled =  round((1 - random.randint(wastage_pct_min_range,wastage_pct_max_range)/100.0) * total_slots,0)
+    lst_slots = [] 
+    weights = []
+    for time_,p,q in zip(lst_days,lst_price,weekend):
+        
+        # More bookings comes with time but also reduces as price increases
+        weights.append(((time_ + 1)* random.uniform(1,1.2))*(1+2.5*q)/math.pow(p,5.0))
+
+    msum = sum(weights)
+    weights = [w/msum for w in weights]
+
+    for w in weights:
+        lst_slots.append(round(w * slots_filled, 0) )
+
+    lst_df.append(pd.DataFrame( {'journey_id' : [j+1] * days,
+                                 'day':lst_days,
+                                 'price' : lst_price,
+                                 'slots' : lst_slots,
+                                'weekend' : weekend} ))
+    
+
+df = pd.concat(lst_df)
+
+df_train = pd.concat(lst_df[:int(train_val_prop * len(lst_df)) + 1])
+df_val = pd.concat(lst_df[int(train_val_prop * len(lst_df)) + 1:])
+
+
+print("df's shape", df.shape)
+print("df_train's shape", df_train.shape)
+print("df_val's shape", df_val.shape)
